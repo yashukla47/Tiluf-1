@@ -1,0 +1,35 @@
+
+steps to follow
+--------------------
+1. deploy the SC on to ropsten test network
+2. Go to graph explorer and create the subgraph with the name TestGraph3 and save it
+3. graph init --from-contract 0x611CCF3500B5d2258c0ca4d2aa30DeF83A10bB52  --network ropsten --abi ./Userdetails.abi Chimbili-Pavan/Userdetails
+4. The above command will create the code required, then go to the folder created with the name "Userdetails" by "cd Userdetails" and edit the code according to the requirements
+5. Then run "graph codegen" command and then build by "graph build command"
+6. By above command, the code is built and compiled sucessfully
+7. Now deploy the code to the sub-graph, for that follow below sub-steps:
+   a. get the token access by entering the command
+   b. deploy the code by "npm run deploy" command
+7. Now go to the graph explorer -> dashboard -> Userdetails
+8. Now start querying the data from the graph node in the playground section with different commands.
+
+
+GraphQL parameter suffix
+---------------------------
+_not
+_gt
+_lt
+_gte
+_lte
+_in
+_not_in
+_contains
+_not_contains
+_starts_with
+_ends_with
+_not_starts_with
+_not_ends_with
+
+-> Full text search fields
+
+

@@ -1,0 +1,23 @@
+1. open command prompt(T1) and type below command to start the ipfs node
+ipfs daemon
+
+2. open the browser and open the specified link in the 1st terminal where the ipfs node UI is hosted
+
+3. open the another terminal(T2) and start using the ipfs by the following commands
+
+
+// creates the directory
+ipfs files mkdir /test
+
+// create a file in the directory and fill the file with specified content
+ipfs files write --create  <path> <data>   
+ipfs files write --create /test/test1 ./Desktop/ipfs/test1.txt
+
+// overwrites the content of the test1 file on IPFS witht the content of the file test2.txt in local directory
+ipfs files write --truncate /test/test1 ./Desktop/ipfs/test2.txt
+
+// returns the hash/CID of the directory called test
+ipfs files stat /test
+
+// returns the hash/CID of the file 'test1' in the directory 'test'
+ipfs files stat /test/test1

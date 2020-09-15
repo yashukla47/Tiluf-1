@@ -1,0 +1,27 @@
+specVersion: 0.0.2
+description: User Management for Ethereum
+repository: https://github.com/graphprotocol/example-subgraph
+schema:
+  file: ./schema.graphql
+dataSources:
+  - kind: ethereum/contract
+    name: UserMain_V1
+    network: mainnet
+    source:
+      address: ''
+      abi: UserMain_V1
+    mapping:
+      kind: ethereum/events
+      apiVersion: 0.0.4
+      language: wasm/assemblyscript
+      entities:
+        - User
+      abis:
+        - name: Gravity
+          file: ./abis/Gravity.json
+      eventHandlers:
+        - event: createUser(string, uint, string, uint)
+          handler: handleCreateUser
+        - event: updateUser(string,uint,string,uint)
+          handler: handleUpdateUser
+      file: ./src/mapping.ts

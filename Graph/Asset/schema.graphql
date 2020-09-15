@@ -1,0 +1,12 @@
+type Asset @entity {
+  id: ID!
+  identity: String!
+  name: String!
+  category: String!
+  owner:String!
+  forSale: Boolean
+  price: uint32!
+  description: String
+}
+
+

@@ -1,0 +1,8 @@
+type User @entity {
+  id: ID!
+  userName: String!
+  address: Bytes!
+  mobile: uint32!
+  picUrl: Bytes
+  role: uint32!
+}
