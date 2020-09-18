@@ -10,7 +10,6 @@ contract AssetLogic{
     }
     
     
-    
     // asset data struct
     struct Product{
         string owner;  // should be the username
@@ -20,7 +19,7 @@ contract AssetLogic{
         string picHash;
         string brandName;
         string brandPicHash;
-        History hstory;
+        History[] history;
         string _3DHash;
         string _2DHash;
         string descrip_highlights;
@@ -34,8 +33,8 @@ contract AssetLogic{
     event NewProduct(string indexed _owner, string indexed _productID, string _productName, string _category, string _picHash, string _brandName, string _brandPicHash,History _history,string _3DHash, string _2DHash,string _descrip_highlights,uint32 _price,bool _forSale,bool _newProduct);
     event UpdateAsset(string indexed _productID,string indexed _name,uint _price,string _descrip);
     event TransferProduct(string indexed _productID,string indexed _owner);
-    event SellProduct(string indexed _productID,bool _forSale);
-    event BuyAsset(string indexed _productID,string indexed _owner);
+    event SellProduct(string indexed _productID,bool _forSale,History _history);
+    event BuyProduct(string indexed _productID,string indexed _owner,History _history,bool _forSale);
     
     address public SysAdminContractAddress;
     
@@ -64,7 +63,7 @@ contract AssetLogic{
     function setSysAdminContractAddress(address _add) public returns(bool){
         require(msg.sender == SysAdminContractAddress, " The user is not the sysadmin ");
         SysAdminContractAddress = _add;
-        return true;
+        return true;0
     }
     
     
@@ -81,13 +80,16 @@ contract AssetLogic{
     }
     
     // creates the asset
-    function createProduct(string memory _owner, string memory _productID, string memory _productName, string memory _category, string memory _picHash, string memory _brandName, string memory _brandPicHash,History memory _history,string memory _3DHash, string memory _2DHash,string memory _descrip_highlights,uint32 _price,bool _forSale) public returns(bool){
+    function createProduct(string memory _userName,string memory _owner, string memory _productID, string memory _productName, string memory _category, string memory _picHash, string memory _brandName, string memory _brandPicHash,string memory _3DHash, string memory _2DHash,string memory _descrip_highlights,uint32 _price,bool _forSale) public returns(bool){
         
         SysAdmin = SysAdminProxy(SysAdminContractAddress);
         
         require(SysAdmin.isAddressExists(msg.sender) == true, " The address is not registered in the eco-system ");
+        
         require(SysAdmin.isUserNameExists(_userName) == true, " The userName is not registered in the eco-system ");
         require(SysAdmin.getRole == 0, " Only designers are allowed to create the asset ");
+        
+        History memory _history = History(_userName,0);
         
         // create the new asset data from the received parameters
             Product memory newProduct = Product(_owner,_productID,_productName,_category,_picHash,_brandName,_brandPicHash,_history,_3DHash,_2DHash,_descrip_highlights,_price,_forSale,true);
@@ -102,23 +104,23 @@ contract AssetLogic{
     
     
     // updates the asset details
-    function updateProduct(string memory _owner, string memory _id, string memory _name, string memory _descrip, uint32 _price) public {
+    function updateProduct(string memory _userName,string memory _owner, string memory _productID, string memory _name, string memory _descrip, uint32 _price) public {
         
         SysAdmin = SysAdminProxy(SysAdminContractAddress);
         
         //require(SysAdmin.isAddressExists(msg.sender) == true, " The address is not registered in the eco-system ");
         require(SysAdmin.isUserNameExists(_userName) == true, " The userName is not registered in the eco-system ");
-        require(keccak256(bytes(assets[_id].owner)) == keccak256(bytes(_userName)), " The user is not the owner of the product.. ");
+        require(keccak256(bytes(products[_productID].owner)) == keccak256(bytes(_userName)), " The user is not the owner of the product.. ");
         
         // fetch the asset from the blockchain
-        if(keccak256(bytes(assets[_id].name)) != keccak256(bytes(_name))){
-            assets[_id].name = _name;
+        if(keccak256(bytes(products[_productID].name)) != keccak256(bytes(_name))){
+            products[_id].name = _name;
         }
-        else if(keccak256(bytes(assets[_id].descrip)) != keccak256(bytes(_descrip))){
-            assets[_id].descrip = _descrip;
+        else if(keccak256(bytes(products[_productID].descrip)) != keccak256(bytes(_descrip))){
+            products[_productID].descrip = _descrip;
         }
-        else if(assets[_id].price != _price){
-            assets[_id].price = _price;
+        else if(products[_productID].price != _price){
+            products[_productID].price = _price;
         }
         else{
             // nothing
@@ -149,9 +151,11 @@ contract AssetLogic{
         
         // change the owner detials of that asset
         products[_productID].owner = _buyer;
+        History memory history = History(_buyer,0);
+        products[_productID].history.push(history);
         
         // emit the event 
-        emit TransferProduct(_productID,_buyer);
+        emit TransferProduct(_productID,_buyer,history);
         
         
     }
@@ -163,7 +167,6 @@ contract AssetLogic{
     function sell(string memory _productID, string memory _userName) public  {
         
         SysAdmin = SysAdminProxy(SysAdminContractAddress);
-        
         
         require(SysAdmin.isAddressExists(msg.sender) == true, " The address is not registered in the eco-system ");
         require(SysAdmin.isUserNameExists(_userName) == true, " The userName is not registered in the eco-system ");
@@ -185,26 +188,35 @@ contract AssetLogic{
     
     
     // buy the product
-    function buy(string memory _userName, string memory _id) public payable  {
+    function buy(string memory _userName, string memory _productID) public payable  {
         
         SysAdmin = SysAdminProxy(SysAdminContractAddress);
         
         //require(SysAdmin.isAddressExists(msg.sender) == true, " The address is not registered in the eco-system ");
         require(SysAdmin.isUserNameExists(_userName) == true, " The userName is not registered in the eco-system ");
-        require(msg.value >= assets[_id].price," The user doesnt have enough funds ");
+        require(msg.value >= products[_productID].price," The user doesnt have enough funds ");
+        require(products[_productID].forSale == true, " The product is not for sale ");
         
         // transfer the ether to the seller
-        string memory sellerUsername = assets[_id].owner;
+        string memory sellerUsername = products[_productID].owner;
         
         address sellerAddr = SysAdmin.getUserNameAddr(sellerUsername);
         
         sellerAddr.transfer(msg.value);
         
         // update the asset owner details in the blockchain
-        assets[_id].owner = _userName;
+        products[_productID].owner = _userName;
+        
+        History memory history = History(_userName,0);
+        
+        // add history of the newly bought user to the product history
+        products[_productID].history.push(history);
+        
+        // make the product as not for sale
+        products[_productID].forSale = false;
         
         // emit the event when asset is bought by sender
-        emit BuyAsset(_id,_userName);
+        emit BuyProduct(_productID,_userName,history,false);
         
     }
     
@@ -221,7 +233,7 @@ contract AssetLogic{
     }
     
     
-    fucntion upgrade(string productID, address newContract, string) external{
+    function upgrade(string calldata roductID, address newContract) external {
         
     }
 
