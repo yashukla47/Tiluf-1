@@ -15,7 +15,7 @@ contract UserMain_V1{
     }
     
     event NewAccount(string indexed _userName, string _name, address indexed _publicKey, string _picHash, string descrip_ContactHash,uint _role);
-    event UpdateAccount(string indexed _userName, string _name, string _picHash, string descrip_ContactHash);
+    event UpdateAccount(string indexed _userName, string _name, string _picHash, string descrip_ContactHash, uint _role);
     
     // lists of the username to the user detials
     mapping(string => Account) public accountList;
@@ -65,7 +65,7 @@ contract UserMain_V1{
     }
     
     //
-    function getNextVerContractAddress() public returns(address) {
+    function getNextVerContractAddress() public view returns(address) {
         require(msg.sender == SysAdminContractAddress," The user is not the sysadmin ");
         return nextVerContractAddress;
     }
@@ -93,11 +93,11 @@ contract UserMain_V1{
         SysAdmin.setRole(_userName,_role);
         
         // emit the event to store the new user details in the graph
-        emit NewAccount(_userName, _name, _publicKey, _picHash, _descrip_ContactHash_role);
+        emit NewAccount(_userName, _name, _publicKey, _picHash, _descrip_ContactHash,_role);
     }
     
     // function to import the already existed account
-    function importAccount(address _add) pure public returns(string[] memory){
+    function importAccount(address _add)  public returns(string[] memory){
         
         SysAdmin = SysAdminProxy(SysAdminContractAddress);
         require(SysAdmin.isAddressExists(_add) == true, " The address is not registered in the eco-system ");
@@ -132,12 +132,12 @@ contract UserMain_V1{
             
         }
         
-        if(_role = null){
+        if(_role == 0){
             accountList[_userName].role = _role;
         }
         
         // emit the event with the updated details to store in the graph node
-        emit UpdateAccount(_userName, _name, _picHash, _descrip_ContactHash,_role);
+        emit UpdateAccount(_userName, _name, _picHash, _descrip_ContactHash, _role);
     }
     
     
@@ -157,8 +157,3 @@ contract UserMain_V1{
     }
     
 }
-
-
-
-
-
