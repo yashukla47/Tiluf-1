@@ -1,4 +1,5 @@
 pragma solidity >=0.5.0 <0.8.0;
+pragma experimental ABIEncoderV2;
 
 contract SysAdminProxy {
    
@@ -6,10 +7,10 @@ contract SysAdminProxy {
    function isUserNameExists(string memory _userName) view public returns(bool){}
    
    //
-   function registerUserName(string memory _userName, address _add) public {}
+   function registerUserName(string memory _userName) public {}
    
    // fetch the user detials and return
-   function getUserNameAddr(string memory _userName, address _add) view public  returns(address){}
+   function getUserNameAddr(string memory _userName) view public  returns(address){}
    
    // set the user detials
    function registerUserNameAddr(string memory _userName, address _add) public returns(bool){}
@@ -48,6 +49,18 @@ contract SysAdminProxy {
    
    //
    function getUserName(address _add) public view returns(string[] memory){}
+   
+   //
+   function setProductOwner(string memory _userName, string memory _productID) public returns(bool) {}
+   
+   //
+   function getProductOwner(string memory _productID) public view returns(string memory) {}
+   
+   // to add the new category
+   function addCategory(string memory _category) public returns(bool) {}
+   
+   // to check whether an category exists in the list
+   function isCategoryExists(string memory _category) public view returns(bool) {}
    
    
    // to upgrade the new address of the implementation contract (i.e.. new version)
