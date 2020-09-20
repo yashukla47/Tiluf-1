@@ -30,11 +30,12 @@ contract SysAdmin {
    // userName to his role
    //mapping(string => uint) public role;
    
-   //
+   /*
    modifier isLegitimateContractAddr(address _add){
        require(contractAddresses[_add] == true, " The call is not from the legitimate contract ");
        _;
    }
+   */
    
    // to add the admins
    function addAdmin(address _add) public returns(bool){
@@ -65,19 +66,19 @@ contract SysAdmin {
    }
    
    // fetch the user detials and return
-   function getUserNameAddr(string memory _userName, address _add) view public isLegitimateContractAddr(_add) returns(address){
+   function getUserNameAddr(string memory _userName) view public returns(address){
        return userNameAddress[_userName];
    }
    
    // set the user detials
-   function registerUserNameAddr(string memory _userName, address _add) public isLegitimateContractAddr(_add) returns(bool){
-       require(userNameAddress[_userName] != address(0), "  User already registered with this ethereum address");
+   function registerUserNameAddr(string memory _userName, address _add) public returns(bool){
+       require(userNameAddress[_userName] == address(0), "  User already registered with this ethereum address");
        userNameAddress[_userName] = msg.sender;
        return true;
    }
    
    
-   // fetch the user detials and return
+   // check whether the address exists or not
    function isAddressExists(address _add) view public returns(bool){
        if(users[_add].length != 0){
            return true;
@@ -88,7 +89,8 @@ contract SysAdmin {
    }
    
    // set the user detials
-   function mapAddToUserName(string memory _userName, address _add) public isLegitimateContractAddr(_add){
+   function mapAddToUserName(string memory _userName, address _add) public {
+      require(userNameAddress[_userName] == msg.sender, "  UserName has not mapped to the sender address ");
       require(userNames[_userName] == true, "  UserName has to first register on the chain ");
       
       bool flag = false;
@@ -116,6 +118,7 @@ contract SysAdmin {
    // -> check wehther the version exists or not before
    function setAssetVersionAddress(string memory ver,address _add) public returns(bool){
        require(msg.sender == admin, " The user is not the admin, so cannot set the asset contract version ");
+       require(assetVer[ver] != _add, " The version already exists ");
        assetVer[ver] = _add;
        return true;
    }
@@ -124,6 +127,7 @@ contract SysAdmin {
    // -> check wehther the version exists or not before
    function setUserVersionAddress(string memory ver,address _add) public returns(bool){
        require(msg.sender == admin, " The user is not the admin, so cannot set the asset contract version ");
+       require(userVer[ver] != _add, " The version already exists ");
        userVer[ver] = _add;
        return true;
    }
@@ -141,7 +145,7 @@ contract SysAdmin {
    }
    
    // 
-   function setRole(string memory _userName,uint _role) public  isLegitimateContractAddr(msg.sender) returns(bool){
+   function setRole(string memory _userName,uint _role) public returns(bool){
        require(contractAddresses[msg.sender] == true," The eth address is not registered in the eco-system ");
        role[_userName] = _role;
    }
@@ -158,11 +162,6 @@ contract SysAdmin {
        return users[_add];
    }
    
-   
-   // to upgrade the new address of the implementation contract (i.e.. new version)
-   function upgradeTo(address _add) public {
-       
-   }
    
    
    
