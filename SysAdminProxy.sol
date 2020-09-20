@@ -28,7 +28,15 @@ contract SysAdmin {
    mapping(address => bool) public contractAddresses;     
    
    // userName to his role
-   //mapping(string => uint) public role;
+   mapping(string => uint) public role;
+   
+   // maps productID to the userName
+   mapping(string => string) public productOwner;
+   
+   //  categories 
+   mapping(string => bool) public categories;
+   
+   event NewCategory(string indexed _category);
    
    /*
    modifier isLegitimateContractAddr(address _add){
@@ -60,7 +68,7 @@ contract SysAdmin {
    }
    
    // set the user detials
-   function registerUserName(string memory _userName, address _add) public isLegitimateContractAddr(_add) {
+   function registerUserName(string memory _userName) public {
        require(userNames[_userName] != true, "  User already registered with this ethereum address");
        userNames[_userName] = true;
    }
@@ -71,7 +79,7 @@ contract SysAdmin {
    }
    
    // set the user detials
-   function registerUserNameAddr(string memory _userName, address _add) public returns(bool){
+   function registerUserNameAddr(string memory _userName) public returns(bool){
        require(userNameAddress[_userName] == address(0), "  User already registered with this ethereum address");
        userNameAddress[_userName] = msg.sender;
        return true;
@@ -160,6 +168,35 @@ contract SysAdmin {
    //
    function getUserName(address _add) public view returns(string[] memory){
        return users[_add];
+   }
+   
+   //
+   function setProductOwner(string memory _userName, string memory _productID) public returns(bool) {
+       productOwner[_productID] = _userName;
+       return true;
+   }
+   
+   //
+   function getProductOwner(string memory _productID) public view returns(string memory) {
+      return productOwner[_productID];
+   }
+   
+   // to add the new category
+   function addCategory(string memory _category) public returns(bool) {
+       require(categories[_category] != true, " The category already exists " ) ;
+       categories[_category] = true;
+       emit NewCategory(_category);
+       return true;
+   }
+   
+   // to check whether an category exists in the list
+   function isCategoryExists(string memory _category) public view returns(bool) {
+       if(categories[_category] == false){
+           return false;
+       }
+       else{
+           return true;
+       }
    }
    
    
