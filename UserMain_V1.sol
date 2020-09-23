@@ -14,8 +14,8 @@ contract UserMain_V1{
         uint role;
     }
     
-    event NewAccount(string indexed _userName, string _name, address indexed _publicKey, string _picHash, string descrip_ContactHash,uint _role);
-    event UpdateAccount(string indexed _userName, string _name, string _picHash, string descrip_ContactHash, uint _role);
+    event UpdateAccount(string indexed _userName, string _name, address indexed _publicKey, string _picHash, string descrip_ContactHash,uint _role);
+    //event UpdateAccount(string indexed _userName, string _name, string _picHash, string descrip_ContactHash, uint _role);
     
     // lists of the username to the user detials
     mapping(string => Account) public accountList;
@@ -43,58 +43,38 @@ contract UserMain_V1{
         SysAdminContractAddress = _add;
     }
     
-    //
+    
+    // **** why do we need this ---- Remove this 
+    /*
     function getSysAdminContractAddress() view public returns(address){
         require(msg.sender == SysAdminContractAddress, " The user is not the sysadmin ");
         address addrs = SysAdminContractAddress;
         return addrs;
-    }
+    } */
     
-    //
+    // **** why do we need this ---- Remove this 
+    /*
     function setSysAdminContractAddress(address _add) public returns(bool){
         require(msg.sender == SysAdminContractAddress, " The user is not the sysadmin ");
         SysAdminContractAddress = _add;
         return true;
-    }
+    }*/
     
-    //
+    // **** why do we need this ---- Remove this 
+    /*
     function setNextVerContractAddress(address _add) public returns(bool) {
         require(msg.sender == SysAdminContractAddress," The user is not the sysadmin ");
         nextVerContractAddress = _add;
         return true;
-    }
+    }*/
     
-    //
+     // **** why do we need this ---- Remove this 
+     /*
     function getNextVerContractAddress() public view returns(address) {
         require(msg.sender == SysAdminContractAddress," The user is not the sysadmin ");
         return nextVerContractAddress;
-    }
+    }*/
     
-    // function to create the user
-    function createAccount(string memory _userName, string memory _name, address _publicKey, string memory _picHash, string memory _descrip_ContactHash,uint _role) public isUserExists(_userName){
-        
-        SysAdmin = SysAdminProxy(SysAdminContractAddress);
-        
-        // remove this and check for the userNames exists or not
-        //require(SysAdmin.isAddressExists(_publicKey) == true, " The address is not registered in the eco-system ");
-        
-        // create a new User struct variable
-        Account  memory newAccount = Account(_userName, _name, _publicKey, _picHash, _descrip_ContactHash,_role);
-        
-        // save the newly created user to the chain
-        accountList[_userName] = newAccount;
-        
-        SysAdmin.registerUserName(_userName,SysAdminContractAddress);
-        
-        SysAdmin.registerUserNameAddr(_userName,SysAdminContractAddress);
-        
-        SysAdmin.mapAddToUserName(_userName,_publicKey);
-        
-        SysAdmin.setRole(_userName,_role);
-        
-        // emit the event to store the new user details in the graph
-        emit NewAccount(_userName, _name, _publicKey, _picHash, _descrip_ContactHash,_role);
-    }
     
     // function to import the already existed account
     function importAccount(address _add)  public returns(string[] memory){
@@ -110,12 +90,14 @@ contract UserMain_V1{
     
     
     // function to update the user
+    // **** check if the msg.sender is the owner of the username -
     function updateAccount(string memory _userName, string memory _name, string memory _picHash, string memory _descrip_ContactHash, uint _role) public {
         
         SysAdmin = SysAdminProxy(SysAdminContractAddress);
         
+        require(SysAdmin.getUserNameAddr(_userName) == msg.sender, " The username and address are not matching ");
         require(SysAdmin.isAddressExists(msg.sender) == true, " The address is not registered in the eco-system ");
-        require(SysAdmin.isUserNameExists(_userName) == true, " The userName is not registered in the eco-system ");
+        //require(SysAdmin.isUserNameExists(_userName) == true, " The userName is not registered in the eco-system ");
         
         
         // fetch the asset from the blockchain
@@ -137,11 +119,11 @@ contract UserMain_V1{
         }
         
         // emit the event with the updated details to store in the graph node
-        emit UpdateAccount(_userName, _name, _picHash, _descrip_ContactHash, _role);
+        emit UpdateAccount(_userName, _name, msg.sender, _picHash, _descrip_ContactHash, _role);
     }
     
     
-    // function to view the user
+    // **** function to view the user
     function viewAccount(string memory _userName) view public isUserExists(_userName) returns(bool){
         
         // return the user details
@@ -149,11 +131,12 @@ contract UserMain_V1{
     }
     
     
-    //
+    // **** Remove this and put it in the system admin 
+    /*
     function upgradeTO(string memory _userName) public returns(bool){
         
         // call the function of the next version smart contract
         
-    }
+    }*/
     
 }
