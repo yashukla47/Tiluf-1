@@ -95,7 +95,11 @@ contract AssetLogic{
     // ***** get role issue need to send the user name -- no parameters -
     // 
     // **** if for sale then ask for price also - handle this in front end
+<<<<<<< HEAD
     function createProduct(string memory _userName, string memory _productID, string memory _productName, string memory _category, string memory _picHash, string memory _brandName, string memory _brandPicHash,string memory __3DHash, string memory __2DHash,string memory _descrip_highlights,uint32 _price,bool _forSale) public returns(bool) {
+=======
+    function createProduct(string memory _userName, string memory _productID, string memory _productName, string memory _category, string memory _picHash, string memory _brandName, string memory _brandPicHash,string memory _3DHash, string memory _2DHash,string memory _descrip_highlights,uint32 _price,bool _forSale) public returns(bool){
+>>>>>>> f6c7444d2b90300557f4280cc77b65b8fa661f42
         
         //SysAdmin = SysAdminProxy(SysAdminContractAddress);
         
@@ -106,6 +110,7 @@ contract AssetLogic{
         History memory _history = History(_userName,block.number,now);
         
         // create the new asset data from the received parameters
+<<<<<<< HEAD
         //Product memory newProduct = Product(_userName,_productID,_productName,_category,_picHash,_brandName,_brandPicHash,new History[](),__3DHash,__2DHash,_descrip_highlights,_price,_forSale,true);
          Product memory newProduct;
         
@@ -126,10 +131,14 @@ contract AssetLogic{
         newProduct.newAsset = true;
         newProduct.hisCount = 0;
         //newProduct.history[0] = _history;
+=======
+        Product memory newProduct = Product(_userName,_productID,_productName,_category,_picHash,_brandName,_brandPicHash,[_history],_3DHash,_2DHash,_descrip_highlights,_price,_forSale,true);
+>>>>>>> f6c7444d2b90300557f4280cc77b65b8fa661f42
         
         // save to the state variable and also register the assets location in the list
         products[_productID] = newProduct;
         
+<<<<<<< HEAD
         Product storage p = products[_productID];
         p.history[0] = _history;
         
@@ -137,6 +146,12 @@ contract AssetLogic{
         
         // emit the event to store it in graph
         emit NewProduct(_userName,_productID,_productName,_category,_picHash,_brandName,_brandPicHash,_history,__3DHash,__2DHash,_descrip_highlights,_price,_forSale,true);
+=======
+        SysAdmin.setProductOwner(_userName,_productID);
+        
+        // emit the event to store it in graph
+        emit NewProduct(_userName,_productID,_productName,_category,_picHash,_brandName,_brandPicHash,_history,_3DHash,_2DHash,_descrip_highlights,_price,_forSale,true);
+>>>>>>> f6c7444d2b90300557f4280cc77b65b8fa661f42
         
     }
     
@@ -296,7 +311,11 @@ contract AssetLogic{
         // update he new product owner in SysAdmin contract
         SysAdmin.setProductOwner(sellerUsername,_productID);
         
+<<<<<<< HEAD
         History memory _history = History(_userName,block.number,now);
+=======
+        History memory history = History(_userName,0);
+>>>>>>> f6c7444d2b90300557f4280cc77b65b8fa661f42
         
         // add history of the newly bought user to the product history
         products[_productID].hisCount++; 
