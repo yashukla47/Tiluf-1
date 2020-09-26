@@ -1,119 +1,90 @@
 pragma solidity >=0.5.0 <0.8.0;
 pragma experimental ABIEncoderV2;
 import "SysAdminProxyInterface.sol";
+import "AssetUpgradeToInterface.sol";
 
 contract AssetLogic{
     
-    //
+    // struct for the History
     struct History{
         string owner;   // userName
-        uint blockNumber;     // block at which this is owned by the above user
-        uint timestamp;
+        uint blockNumber;
+        uint timestamp; //  timestamp at which this is owned by the above user
     }
     
     
     // asset data struct
-    // **** talk about the history 
     struct Product{
         string owner;  // should be the username
         string productID;
         string productName;
         string category;
         string picHash;
-        string brandName;
-        string brandPicHash;
-        //History[] history;
+        string brandUserName;
         string _3DHash;
         string _2DHash;
-        string descrip_highlights;
-        uint price;
-        bool forSale;
-        bool newAsset;  
-        uint hisCount;
+        string liveHash;
+        string descripHighlightsHash;
+        string status;                 // checks the status of the free, forsale, notForSale 
+        uint price;        
+        uint numberOfTransfers;
         mapping(uint => History) history;
-        //address contractAddre;
+        
+        address upgradedcontractAddress;
+       
     }
     
     
-    event NewProduct(string indexed _owner, string indexed _productID, string _productName, string _category, string _picHash, string _brandName, string _brandPicHash,History _history,string _3DHash, string _2DHash,string _descrip_highlights,uint32 _price,bool _forSale,bool _newProduct);
-    event UpdateProduct(string indexed _owner,string indexed _productID, string _productName, string _category, string _picHash, string _brandName, string _brandPicHash, string __3DHash, string __2DHash, string _descrip_highlights);
-    event TransferProduct(string indexed _productID,string indexed _owner, History _history);
-    event SellProduct(string indexed _productID,bool _forSale,uint _price);
-    event BuyProduct(string indexed _productID,string indexed _owner,History _history,bool _forSale);
+    address public SysAdminProxyAddress;
     
-    address public SysAdminContractAddress;
     
-    address private nextVerContractAddress;
     
     // declare the sysadmin contract type variable
-    SysAdminProxy private SysAdmin = SysAdminProxy(SysAdminContractAddress);
+    SysAdminProxy public SysAdmin;
+    
+    //declare upgraded contract 
+    AssetUpgradeToInterface upgradedToContract;
     
     // stores the lists of all the assets with their id as key and asset as value
     mapping(string => Product) public products;
     
+    
+    event NewProduct(string indexed _owner, string indexed _productID, string _productName, string _category, string _picHash, string _brandName, string _brandPicHash,History _history,string _3DHash, string _2DHash,string _descrip_highlights,uint32 _price,bool _forSale,bool _newProduct, uint numberOftransfers);
+    event UpdateProduct(string indexed _owner,string indexed _productID, string _productName, string _category, string _picHash, string _brandName, string _brandPicHash, string __3DHash, string __2DHash, string _descrip_highlights);
+    event TransferProduct(string indexed _productID,string indexed _owner, History _history);
+    event SellProduct(string indexed _productID, string status, uint _price);
+    event BuyProduct(string indexed _productID,string indexed _owner, History _history);
+    
+   
+    
     // constructor of the contract
     constructor(address _add) public  {
-        SysAdminContractAddress = _add;
+        SysAdminProxyAddress = _add;
+        SysAdmin = SysAdminProxy(SysAdminProxyAddress);
     }
     
-    // **** what is this
-    // *** remove this ###
-    /*
-    function getSysAdminContractAddress() view public returns(address){
-        require(msg.sender == SysAdminContractAddress, " The user is not the sysadmin ");
-        address addrs = SysAdminContractAddress;
-        return addrs;
-    }
-    */
     
-    // ****remove this ###
-    /*
-    function setSysAdminContractAddress(address _add) public returns(bool){
-        require(msg.sender == SysAdminContractAddress, " The user is not the sysadmin ");
-        SysAdminContractAddress = _add;
-        return true;
-    }
-    */
     
-    // ***** remove and implement next version for each product 
-    function setNextVerContractAddress(address _add) public returns(bool) {
-        require(msg.sender == SysAdminContractAddress," The user is not the sysadmin ");
-        nextVerContractAddress = _add;
-        return true;
-    }
-    
-    // ***** remove and implement next version for each product 
-    function getNextVerContractAddress() view public returns(address) {
-        require(msg.sender == SysAdminContractAddress," The user is not the sysadmin ");
-        return nextVerContractAddress;
-    }
     
     // creates the asset 
-    // ***** Remove require for the address -
-    // **** Check if the uername is owned by the msg.sender -
-    // ***** Perfect the History the block number issue 
-    // ***** get role issue need to send the user name -- no parameters -
-    // 
-    // **** if for sale then ask for price also - handle this in front end
-<<<<<<< HEAD
-    function createProduct(string memory _userName, string memory _productID, string memory _productName, string memory _category, string memory _picHash, string memory _brandName, string memory _brandPicHash,string memory __3DHash, string memory __2DHash,string memory _descrip_highlights,uint32 _price,bool _forSale) public returns(bool) {
-=======
-    function createProduct(string memory _userName, string memory _productID, string memory _productName, string memory _category, string memory _picHash, string memory _brandName, string memory _brandPicHash,string memory _3DHash, string memory _2DHash,string memory _descrip_highlights,uint32 _price,bool _forSale) public returns(bool){
->>>>>>> f6c7444d2b90300557f4280cc77b65b8fa661f42
+    function createProduct(string memory _userName, string memory _productID, string memory _productName, string memory _category, string memory _picHash, string memory _brandName, string memory _livehash,string memory _3DHash, string memory _2DHash, string memory _descripHighlightsHash, uint32 _price, bool _forSale) public returns(bool){
         
-        //SysAdmin = SysAdminProxy(SysAdminContractAddress);
         
-        require(SysAdmin.getUserNameAddr(_userName) == msg.sender, " The username and address are not matching ");
-        require(SysAdmin.getRole(_userName) == 0, " Only designers are allowed to create the asset ");
-        require(bytes(SysAdmin.getProductOwner(_productID)).length == 0, " The product ID already exists ");
+        require(SysAdmin.getUserNameAddr(_userName) == msg.sender, " the caller doesnot holds the username ");
         
-        History memory _history = History(_userName,block.number,now);
+        require(SysAdmin.role[_username] == "designer", " Only designers are allowed to create the asset ");
         
-        // create the new asset data from the received parameters
-<<<<<<< HEAD
-        //Product memory newProduct = Product(_userName,_productID,_productName,_category,_picHash,_brandName,_brandPicHash,new History[](),__3DHash,__2DHash,_descrip_highlights,_price,_forSale,true);
-         Product memory newProduct;
+        require(bytes(products[_productID]).length != 0, " The product ID already exists ");
         
+        if (_forSale == true )
+        {
+            require ( _price > 0, "open for sale but price not mentioned");
+        }
+        
+        History memory _history = History (_userName, block.number, block.timestamp);
+        
+        // create the new asset 
+        Product  newProduct;
         
         newProduct.owner = _userName;
         newProduct.productID = _productID;
@@ -121,54 +92,40 @@ contract AssetLogic{
         newProduct.category = _category;
         newProduct.picHash = _picHash;
         newProduct.brandName = _brandName;
-        newProduct.brandPicHash = _brandPicHash;
-        //newProduct.history = new History[](1);
+        
         newProduct._3DHash = __3DHash;
         newProduct._2DHash = __2DHash;
-        newProduct.descrip_highlights = _descrip_highlights;
+        newProduct.descripHighlightsHash= _descripHighlightsHash;
         newProduct.price = _price;
         newProduct.forSale = _forSale;
-        newProduct.newAsset = true;
-        newProduct.hisCount = 0;
-        //newProduct.history[0] = _history;
-=======
-        Product memory newProduct = Product(_userName,_productID,_productName,_category,_picHash,_brandName,_brandPicHash,[_history],_3DHash,_2DHash,_descrip_highlights,_price,_forSale,true);
->>>>>>> f6c7444d2b90300557f4280cc77b65b8fa661f42
         
-        // save to the state variable and also register the assets location in the list
+        newProduct.numberOfTransfers = 0;
+
         products[_productID] = newProduct;
         
-<<<<<<< HEAD
-        Product storage p = products[_productID];
-        p.history[0] = _history;
+        newProduct.history[0] = _history;
         
-       SysAdmin.setProductOwner(_userName,_productID);
         
         // emit the event to store it in graph
-        emit NewProduct(_userName,_productID,_productName,_category,_picHash,_brandName,_brandPicHash,_history,__3DHash,__2DHash,_descrip_highlights,_price,_forSale,true);
-=======
-        SysAdmin.setProductOwner(_userName,_productID);
-        
-        // emit the event to store it in graph
-        emit NewProduct(_userName,_productID,_productName,_category,_picHash,_brandName,_brandPicHash,_history,_3DHash,_2DHash,_descrip_highlights,_price,_forSale,true);
->>>>>>> f6c7444d2b90300557f4280cc77b65b8fa661f42
+        emit NewProduct(_userName, _productID,_productName,_category,_picHash, _brandName, _history, _3DHash, _2DHash, _descripHighlightsHash, _price, _forSale, true, 0, 0x0);
         
     }
     
     
     // updates the asset details
-    // **** choose if we define the SysAdmin globally and it cannot changed or it should be able to be changed for each product - for yash's reference
-    // **** check if the owner of the username is the address or not -
-    // **** check for the null value of the feilds 
-    // **** include the for sale logic in the update function 
-    function updateProduct(string memory _userName, string memory _productID, string memory _productName, string memory _category, string memory _picHash, string memory _brandName, string memory _brandPicHash, string memory __3DHash, string memory __2DHash, string memory _descrip_highlights) public {
+    function updateProduct(string memory _userName, string memory _productID, string memory _productName, string memory _category, string memory _picHash, string memory _designerUserName, string memory __3DHash, string memory __2DHash, string memory _liveHash, string memory _descripHighlightsHash, bool _Status, uint price ) public {
         
-        //SysAdmin = SysAdminProxy(SysAdminContractAddress);
         
-        //require(SysAdmin.isAddressExists(msg.sender) == true, " The address is not registered in the eco-system ");
-        require(SysAdmin.getUserNameAddr(_userName) == msg.sender, " The username and address are not matching ");
-        //require(SysAdmin.isUserNameExists(_userName) == true, " The userName is not registered in the eco-system ");
-        require(keccak256(bytes(products[_productID].owner)) == keccak256(bytes(_userName)), " The user is not the owner of the product.. ");
+        require(products[_productID].numberOfTransfers == 0, "the product cannot be updated, it's already sold at least once ")
+ 
+        require(keccak256(bytes(products[_productID].owner)) == keccak256(bytes(_userName)), " The user is not the owner of the product ");
+ 
+        require(products[_productID].upgradedcontractAddress != address(0x0), "the product is already upgraded to another version")
+
+        
+        require(SysAdmin.getUserNameAddr(_userName) == msg.sender, "The address is not the holder of the username");
+
+        
         
         // fetch the asset from the blockchain
         if(bytes(_productName).length != 0){
@@ -183,13 +140,10 @@ contract AssetLogic{
             products[_productID].picHash = _picHash;
         }
         
-        if(bytes(_brandName).length != 0){
+        if(bytes(_designerUserdName).length != 0){
             products[_productID].brandName = _brandName;
         }
         
-        if(bytes(_brandPicHash).length != 0){
-            products[_productID].brandPicHash = _brandPicHash;
-        }
         
         if(bytes(__3DHash).length != 0){
             products[_productID]._3DHash = __3DHash;
@@ -199,46 +153,49 @@ contract AssetLogic{
             products[_productID]._2DHash = __2DHash;
         }
         
-        if(bytes(_descrip_highlights).length != 0){
-            products[_productID].descrip_highlights = _descrip_highlights;
+        if(bytes(_liveHash).length != 0){
+            products[_productID].liveHash = _liveHash;
         }
         
+        if(bytes(_descripHighlightsHash).length != 0){
+            products[_productID].descripHighlightsHash = _descripHighlightsHash;
+        }
+        
+        
+        
         // emit the event for the updation in the graph
-        emit UpdateProduct(products[_productID].owner,_productID,_productName,_category,_picHash,_brandName,_brandPicHash,__3DHash,__2DHash,_descrip_highlights);
+        emit UpdateProduct(products[_productID].owner,_productID,_productName,_category,_picHash,_brandName,_brandPicHash,__3DHash,__2DHash,_descripHighlightsHash);
     }
     
     
-    // fetches the asset from the list
-    // for the flow
-    function viewAsset(string calldata _id,string calldata _owner) view external {
-        
-        // return the asset details
-        
-    }
+    
     
     
     // transfers the asset to the specified user
-    // ***** remove --- is address exists -
-    // ***** check  is the owner of the user is the msg.sender -
-    // ***** update the history part logic 
-    function transferProduct(string memory _userName, string memory _productID, string memory _buyer) public {
+    function transferProduct(string memory _userName, string memory _productID, string memory _receiver) public {
         
-        //SysAdmin = SysAdminProxy(SysAdminContractAddress);
+        require(products[_productID].upgradedcontractAddress != address(0x0), "the product is upgraded to another version")
+
+
+        require(SysAdmin.getUserNameAddr(_userName) == msg.sender, "The address is not the holder of the username");
         
-        //require(SysAdmin.isAddressExists(msg.sender) == true, " The address is not registered in the eco-system ");
-        require(SysAdmin.getUserNameAddr(_userName) == msg.sender, " The username and address are not matching ");
-        //require(SysAdmin.isUserNameExists(_userName) == true, " The user is not registered in the eco-system ");
-        require(keccak256(bytes(products[_productID].owner)) == keccak256(bytes(_userName)), " The user is not the owner of the product.. ");
-        require(SysAdmin.isUserNameExists(_buyer) == true, " The buyer is not registered in the eco-system ");
+        require(keccak256(bytes(products[_productID].owner)) == keccak256(bytes(_userName)), "The user is not the owner of the product");
+        
+        require(SysAdmin.isUserNameExists(_receiver) == true, "The buyer is not registered in the eco-system");
         
         // change the owner detials of that asset
-        products[_productID].owner = _buyer;
-        History memory _history = History(_buyer,block.number,now);
-        products[_productID].hisCount++; 
-        products[_productID].history[products[_productID].hisCount] = _history;
+        products[_productID].owner = _receiver;
+        
+        History memory history = History(_receiver, block.number, block.timestamp);
+        
+        products[_productID].liveHash = "";
+        
+        products[_productID].numberOfTransfers += 1;  
+        
+        products[_productID].history[products[_productID].numberOfTransfers] = _history;
         
         // emit the event 
-        emit TransferProduct(_productID,_buyer,_history);
+        emit TransferProduct( _productID, _receiver, history);
         
         
     }
@@ -247,57 +204,43 @@ contract AssetLogic{
     
     
     // transfers the asset details by calling the updateAsset func of the Storage.sol contract
-    // **** check if the msg.sender is the owner of the username and the product  -
-    // **** ask for the price also while keeping it for sale 
-    // **** mostly keep the sell and not for sell in the update product details part and if it is for sale then price should be mentioned 
-    function sell(string memory _productID, string memory _userName, uint _price, bool _sell) public  {
+    function sell(string memory _productID, string memory _userName, uint _price, string _status) public  {
         
-        //SysAdmin = SysAdminProxy(SysAdminContractAddress);
-        
+
         require(SysAdmin.getUserNameAddr(_userName) == msg.sender, " The username and address are not matching ");
-        //require(SysAdmin.isAddressExists(msg.sender) == true, " The address is not registered in the eco-system ");
-        //require(SysAdmin.isUserNameExists(_userName) == true, " The userName is not registered in the eco-system ");
+       
         require(keccak256(bytes(products[_productID].owner)) == keccak256(bytes(_userName)), " The user is not the owner of the product.. ");
         
-        if(_sell == true){
+        require(products[_productID].upgradedcontractAddress != address(0x0), "the product is upgraded to another version")
+
+        
+        if(keccak256(bytes(_status)) == keccak256(bytes(forSale)){
             
             require(_price > 0, " The price is not mentioned  " );
-            if(products[_productID].forSale != _sell){
-                products[_productID].forSale = _sell;
-            }
-            
-            products[_productID].price = _price;
-        }
-        
-        else{
-            products[_productID].forSale = _sell;
+          
+            products[_productID].status = _status;
         }
         
         
         
         // emit the event when asset got called
-        emit SellProduct(_productID,products[_productID].forSale,_price);
+        emit SellProduct(_productID,products[_productID].status, _price);
     }
     
-    
-    // fetches the all assets owned by the user from GRAPH node
-    // **** this cannot happen 
-    // **** for the flow 
-    // 
-    function viewMyAssets(string memory _userName) public{
-        // get the details from the graph node
-    }
+   
     
     
     // buy the product
-    // **** correct the history logic 
-    // **** check wheather the username belongs to the specific address msg.sender -
-    function buy(string memory _userName, string memory _productID) public payable  {
+    function buy(string memory _buyerName, string memory _buyerName, string memory _productID) public payable  {
         
-        require(SysAdmin.getUserNameAddr(_userName) == msg.sender, " The username and address are not matching ");
-        require(msg.value >= products[_productID].price," The user doesnt have enough funds ");
-        require(products[_productID].forSale == true, " The product is not for sale ");
+        require(SysAdmin.getUserNameAddr(_userName) == msg.sender, "The address is not the holder of the username");
         
+        require(msg.value >= products[_productID].price," Not enough funds");
+        
+        require(keccak256(bytes(_status)) == keccak256(bytes(forSale), " The product is not for sale ");
+        
+        require(products[_productID].upgradedcontractAddress != address(0x0), "the product is upgraded to another version")
+
         // transfer the ether to the seller
         string memory sellerUsername = products[_productID].owner;
         
@@ -306,50 +249,47 @@ contract AssetLogic{
         sellerAddr.transfer(msg.value);
         
         // update the asset owner details in the blockchain
-        products[_productID].owner = _userName;
+        products[_productID].owner = _buerName;
         
-        // update he new product owner in SysAdmin contract
-        SysAdmin.setProductOwner(sellerUsername,_productID);
         
-<<<<<<< HEAD
-        History memory _history = History(_userName,block.number,now);
-=======
-        History memory history = History(_userName,0);
->>>>>>> f6c7444d2b90300557f4280cc77b65b8fa661f42
+       
+        products[_productID].numberOftransfers += 1;  
         
-        // add history of the newly bought user to the product history
-        products[_productID].hisCount++; 
         products[_productID].history[products[_productID].hisCount] = _history;
         
+        products[_productID].liveHash = "";
+        
+        History memory history = History(_receiver, block.number, block.timestamp);
+        
+        
+        // add history of the newly bought user to the product history
+        products[_productID].history[products[_productID].numberOfTransfers = _history;
+        
         // make the product as not for sale
-        products[_productID].forSale = false;
+        products[_productID].status = "notForSale"
         
         // emit the event when asset is bought by sender
-        emit BuyProduct(_productID,_userName,_history,false);
+        emit BuyProduct(_productID, _buerName, history);
         
     }
     
-    
-    // fabricates the asset
-    // *** decide the logic for the fabrication
-    function fabricate() external {
+    function upgrade(string memory _productID, string memory _userName, address _upgradedcontractAddress) public {
         
-    }
-    
-    
-    // for tailoring
-    // *** deceide the logic for Tailoring 
-    function tailor() external {
+        require(SysAdmin.getUserNameAddr(_userName) == msg.sender, "the caller is not allowed to upgrade the product");
         
-    }
-    
-    
-    function upgrade(string calldata roductID, address newContract) external {
+        require(products[_productID].upgradedcontractAddress != address(0x0), "the product is already upgraded to another version")
         
+        upgradedContract = AssetUpgradeInterface(_upgradedcontractAddress)
+        
+        // calls the UpgradeToThis contract on the upgraded contract 
+        upgradedContract.UpgradeToThis( _productID, products[_productID].owner)
+        
+        products[_productID].upgradedcontractAddress = _upgradedcontractAddress;
+        
+        // history logic 
+        
+        // **** event 
     }
-
-    
-    // gets the 
     
     
 }
